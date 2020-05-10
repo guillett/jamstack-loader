@@ -14,14 +14,18 @@ function load(source) {
 }
 
 function populate(collection, rootFolder) {
-  const cPath = path.join(rootFolder ? rootFolder : '.', collection.folder)
   let items = []
 
-  if (collection.extension !== 'yml') {
+  if (! collection.folder) {
+    if (this && this.emitWarning) {
+      this.emitWarning(`Loader can only process collection with a folder (collection: ${collection.name})`)
+    }
+  } else if (collection.extension !== 'yml') {
     if (this) {
       this.emitWarning(`Loader can only process yml files (provided extension: ${collection.extension})`)
     }
   } else {
+    const cPath = path.join(rootFolder ? rootFolder : '.', collection.folder)
     try {
       items = fs.readdirSync(cPath).map(itemFile => {
         const slug = path.basename(itemFile, `.${collection.extension}`)
