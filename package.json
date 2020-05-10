@@ -1,6 +1,6 @@
 {
   "name": "jamstack-loader",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Jamstack for webpack",
   "main": "src/index.js",
   "directories": {
