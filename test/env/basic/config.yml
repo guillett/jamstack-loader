@@ -1,0 +1,4 @@
+collections:
+  - name: numbers
+    folder: "data/numbers"
+    extension: yml
