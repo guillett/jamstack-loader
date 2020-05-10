@@ -26,6 +26,10 @@ function populate(collection, rootFolder) {
     }
   } else {
     const cPath = path.join(rootFolder ? rootFolder : '.', collection.folder)
+    if (this && this.addContextDependency) {
+      this.addContextDependency(cPath)
+    }
+
     try {
       items = fs.readdirSync(cPath).map(itemFile => {
         const slug = path.basename(itemFile, `.${collection.extension}`)
