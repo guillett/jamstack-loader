@@ -1,11 +1,14 @@
 {
   "name": "jamstack-loader",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Jamstack for webpack",
   "main": "src/index.js",
   "directories": {
     "test": "test"
   },
+  "files": [
+    "src/"
+  ],
   "scripts": {
     "test": "jest"
   },
