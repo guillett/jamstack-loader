@@ -13,36 +13,22 @@ function load(source) {
   return yaml.safeLoad(source)
 }
 
-function parse(config, sourcePath) {
-  const loader = this
-  config.sourcePath = sourcePath
+function populate(collection, rootFolder) {
+  const cPath = path.join(rootFolder ? rootFolder : '.', collection.folder)
+  let items = []
 
-  if (!config.collections) {
-    throw `Missing collections at ${sourcePath}. Content ${JSON.stringify(config, null, 1)}`
-  }
-  const rootFolder = path.join(path.dirname(sourcePath), config.root ? config.root : '.')
-
-  config.collections = config.collections.reduce((accum, collection) => {
-    if (!collection.folder) {
-      return accum
+  if (collection.extension !== 'yml') {
+    if (this) {
+      this.emitWarning(`Loader can only process yml files (provided extension: ${collection.extension})`)
     }
-
-    if (collection.extension !== 'yml') {
-      if (loader) {
-        loader.emitWarning(`Loader can only process yml files (provided extension: ${collection.extension})`)
-      } 
-      return accum
-    }
-
-    var cPath = path.join(rootFolder, collection.folder)
-    accum[collection.name] = {
-      ...collection,
-      items: fs.readdirSync(cPath).map(itemFile => {
+  } else {
+    try {
+      items = fs.readdirSync(cPath).map(itemFile => {
         const slug = path.basename(itemFile, `.${collection.extension}`)
         const itemPath = path.join(cPath, itemFile)
 
-        if (loader && loader.addDependency) {
-          loader.addDependency(itemPath)
+        if (this && this.addDependency) {
+          this.addDependency(itemPath)
         }
 
         return {
@@ -50,7 +36,29 @@ function parse(config, sourcePath) {
           ...yaml.safeLoad(fs.readFileSync(itemPath))
         }
       })
+    } catch (e) {
+      if (e.code !== 'ENOENT') {
+        throw e
+      }
     }
+  }
+
+  return {
+    ...collection,
+    items: items
+  }
+}
+
+function parse(config, sourcePath) {
+  if (!config.collections) {
+    throw `Missing collections at ${sourcePath}. Content ${JSON.stringify(config, null, 1)}`
+  }
+
+  const rootPath = path.join(path.dirname(sourcePath), config.root ? config.root : '.')
+
+  const pop = populate.bind(this)
+  config.collections = config.collections.reduce((accum, collection) => {
+    accum[collection.name] = pop(collection, rootPath)
 
     return accum
   }, {})
@@ -61,5 +69,6 @@ function parse(config, sourcePath) {
 module.exports = {
   read,
   load,
-  parse
+  populate,
+  parse,
 }
