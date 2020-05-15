@@ -9,9 +9,7 @@ function read(sourcePath) {
   } 
 }
 
-function load(source) {
-  return yaml.safeLoad(source)
-}
+const load = yaml.safeLoad
 
 function populate(collection, rootFolder) {
   let items = []
@@ -21,7 +19,7 @@ function populate(collection, rootFolder) {
       this.emitWarning(`Loader can only process collection with a folder (collection: ${collection.name})`)
     }
   } else if (collection.extension !== 'yml') {
-    if (this) {
+    if (this && this.emitWarning) {
       this.emitWarning(`Loader can only process yml files (provided extension: ${collection.extension})`)
     }
   } else {
@@ -30,13 +28,15 @@ function populate(collection, rootFolder) {
       this.addContextDependency(cPath)
     }
 
+    const context = this
+
     try {
       items = fs.readdirSync(cPath).map(itemFile => {
         const slug = path.basename(itemFile, `.${collection.extension}`)
         const itemPath = path.join(cPath, itemFile)
 
-        if (this && this.addDependency) {
-          this.addDependency(itemPath)
+        if (context && context.addDependency) {
+          context.addDependency(itemPath)
         }
 
         return {
@@ -57,7 +57,7 @@ function populate(collection, rootFolder) {
   }
 }
 
-function parse(config, sourcePath) {
+function build(config, sourcePath) {
   if (!config.collections) {
     throw `Missing collections at ${sourcePath}. Content ${JSON.stringify(config, null, 1)}`
   }
@@ -74,9 +74,15 @@ function parse(config, sourcePath) {
   return config
 }
 
+function get(configPath) {
+  const config = read(configPath)
+  return build(load(config.source), config.sourcePath)
+}
+
 module.exports = {
+  get,
   read,
   load,
   populate,
-  parse,
+  build,
 }
