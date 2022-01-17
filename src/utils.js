@@ -31,19 +31,21 @@ function populate(collection, rootFolder) {
     const context = this
 
     try {
-      items = fs.readdirSync(cPath).map(itemFile => {
-        const slug = path.basename(itemFile, `.${collection.extension}`)
-        const itemPath = path.join(cPath, itemFile)
+      items = fs.readdirSync(cPath)
+        .filter(itemFile => [".yml", ".yaml"].includes(path.extname(itemFile).toLowerCase()))
+        .map(itemFile => {
+          const slug = path.basename(itemFile, `.${collection.extension}`)
+          const itemPath = path.join(cPath, itemFile)
 
-        if (context && context.addDependency) {
-          context.addDependency(itemPath)
-        }
+          if (context && context.addDependency) {
+            context.addDependency(itemPath)
+          }
 
-        return {
-          slug,
-          ...yaml.safeLoad(fs.readFileSync(itemPath))
-        }
-      })
+          return {
+            slug,
+            ...yaml.safeLoad(fs.readFileSync(itemPath))
+          }
+        })
     } catch (e) {
       if (e.code !== 'ENOENT') {
         throw e
